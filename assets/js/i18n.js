@@ -8,6 +8,7 @@ export const LANGS = [
   { code: 'en', name: 'English', short: 'EN' },
   { code: 'pt-BR', name: 'Português (Brasil)', short: 'PT' },
   { code: 'es', name: 'Español', short: 'ES' },
+  { code: 'zh-TW', name: '繁體中文', short: '繁' },
 ];
 const KEY = 'pw-lang';
 const CODES = LANGS.map((l) => l.code);
@@ -32,6 +33,7 @@ export function pickLang() {
     const low = String(l).toLowerCase();
     if (low.startsWith('pt')) return 'pt-BR';
     if (low.startsWith('es')) return 'es';
+    if (low === 'zh-tw' || low.startsWith('zh-hant') || low === 'zh-hk' || low === 'zh-mo') return 'zh-TW';
     if (low.startsWith('en')) return 'en';
   }
   return 'en';

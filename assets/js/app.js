@@ -19,7 +19,21 @@ const hasRepo = (e) => REPO_RE.test(e.repo || '');
 const effortAvatar = (e) => (/^assets\/img\/[\w/.-]+$/.test(e.avatar || '') ? e.avatar : avatar(e.repo));
 const effortUrl = (e) => (hasRepo(e) ? repoUrl(e.repo, e.branch) : /^news\/[a-z0-9-]+\.html$/.test(e.link || '') ? e.link : '');
 const safeHttp = (u) => (/^https:\/\//.test(u || '') ? u : '#');
-const pct = (v) => `${Math.round(v * 10) / 10}`;
+const ruNumber = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
+const ruCompact = new Intl.NumberFormat('ru-RU', { notation: 'compact', maximumFractionDigits: 1 });
+const fmtNumber = (n) => (locale() === 'ru-RU' ? ruNumber.format(n) : String(n));
+const fmtTenths = (v) => fmtNumber(Math.round(v * 10) / 10);
+const pctSign = () => (locale() === 'ru-RU' ? '\u00a0%' : '%');
+const pct = (v) => `${fmtTenths(v)}${pctSign()}`;
+
+function fmtDay(date, withYear = true) {
+  const day = new Date(`${date}T00:00:00Z`);
+  if (!Number.isFinite(day.getTime())) return date || '';
+  return day.toLocaleDateString(locale(), {
+    day: 'numeric', month: 'short', year: withYear ? 'numeric' : undefined, timeZone: 'UTC',
+  });
+}
+const fmtProjectDate = (date) => (locale() === 'ru-RU' ? fmtDay(date) : date || '');
 
 // Names from scoring.js, in the page's language when a translation exists.
 const msLabel = (key) => tr(`ms.${key}.label`, MILESTONES.find((m) => m.key === key)?.label || key);
@@ -53,7 +67,11 @@ function ago(iso) {
   return new Date(ms).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 }
 const daysSince = (iso) => (Date.now() - Date.parse(iso)) / 864e5;
-const fmtK = (n) => (n == null ? '-' : n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : `${n}`);
+function fmtK(n) {
+  if (n == null) return '-';
+  if (locale() === 'ru-RU') return ruCompact.format(n);
+  return n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
+}
 
 const ICON = {
   // Radiation trefoil: three 60-degree blades around a dot.
@@ -146,7 +164,10 @@ function startCountdown(exe) {
   const by = exe.by ? t('cd.dropBy', { by: exe.by }) : t('cd.drop');
   const released = exe.status === 'released' && exe.releasedAt;
   const target = Date.parse(released ? exe.releasedAt : exe.expectedAt || `${exe.expected}T00:00:00Z`);
-  const dayFmt = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
+  const dayFmt = new Intl.DateTimeFormat(locale(), {
+    weekday: 'short', day: 'numeric', month: 'short',
+    timeZone: released || exe.timeAnnounced ? undefined : 'UTC',
+  });
   const timeFmt = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
   $('#cd-title').textContent = released ? t('cd.released') : by;
@@ -195,13 +216,14 @@ function renderOverall(data) {
   const all = data.efforts.filter((e) => !e.nuked); // nuked efforts aren't shown anywhere
   const ov = overall(all);
   const leader = ov.leader?.effort;
+  $('#ov-score + .pct').textContent = pctSign();
   animateNumber($('#ov-score'), ov.score);
   $('#ov-leader').innerHTML = leader
     ? `${esc(t('ov.leader'))} <a href="#effort-${esc(leader.id)}">${esc(leader.name)}</a> ${hasRepo(leader) ? `${esc(t('ov.byOwner', { owner: owner(leader.repo) }))} `
       : leader.basedOn?.length ? `<span class="ov-private"><span class="pb-lock" aria-hidden="true"></span>${t('ov.privateOn', { names: leader.basedOn.map((id) => `<a href="#effort-${esc(id)}">${esc(effortName(id))}</a>`).join(', ') })}</span> ` : ''}${esc(ov.leader.reached === 'groundwork' ? t('ov.stillGroundwork') : t('ov.reached', { label: msLabel(ov.leader.reached) }))}`
     : esc(t('ov.none'));
   $('#ov-stage').textContent = msLabel(ov.furthest.key);
-  $('#ov-top3').textContent = `${pct(ov.top3)}%`;
+  $('#ov-top3').textContent = pct(ov.top3);
   const booted = all.filter((e) => ladderValue(e.gta?.boots) >= 1).length;
   $('#ov-boot').textContent = `${booted} / ${all.length}`;
   $('#ov-count').textContent = `${all.length}`;
@@ -215,7 +237,7 @@ function renderOverall(data) {
   $('#mega-ticks').innerHTML = MILESTONES.slice(1, -1).map((m) => `<i style="left:${m.at}%"></i>`).join('');
   $('#mega-labels').innerHTML = MILESTONES.map((m, i) => {
     const cls = i <= furthestIdx ? 'is-reached' : i === furthestIdx + 1 ? 'is-next' : '';
-    return `<div class="mega-label ${cls}" style="left:${m.at}%" data-tip="${esc(msDesc(m))}" data-tip-title="${esc(msLabel(m.key))}"><b>${m.at}%</b><span class="dot"></span>${esc(msLabel(m.key))}</div>`;
+    return `<div class="mega-label ${cls}" style="left:${m.at}%" data-tip="${esc(msDesc(m))}" data-tip-title="${esc(msLabel(m.key))}"><b>${pct(m.at)}</b><span class="dot"></span>${esc(msLabel(m.key))}</div>`;
   }).join('') +
     // Between Playable and Complete there's no single next step: the four tracks fill it side by side.
     `<p class="mega-zone" data-tip="${esc(t('method.tracksSub'))}" data-tip-title="${esc(t('method.tracksTitle'))}">${TRACKS.map((tk) => esc(trackLabel(tk))).join(' · ')}</p>`;
@@ -268,8 +290,8 @@ function drawMarkers(ranked, leader) {
         ? `${msLabel(it.r.reached)} · ${t('private.markerTip', { names: (e.basedOn || []).map(effortName).join(', ') || '-' })}`
         : `${msLabel(it.r.reached)} · ${e.approach || ''}`;
       return `<a class="marker ${e === leader ? 'is-leader' : ''}${priv ? ' is-private' : ''}" href="#effort-${esc(e.id)}" style="left:${it.a}px;bottom:${H - avatarY - 32}px;--i:${i}"
-                data-tip-title="${esc(e.name)} · ${pct(it.r.score)}%" data-tip="${esc(tip)}">
-                <span class="mk-name">${esc(e.name)} · ${pct(it.r.score)}%</span>
+                data-tip-title="${esc(e.name)} · ${pct(it.r.score)}" data-tip="${esc(tip)}">
+                <span class="mk-name">${esc(e.name)} · ${pct(it.r.score)}</span>
                 ${priv ? `<span class="mk-face">${face}<span class="bp-lock"><span class="pb-lock" aria-hidden="true"></span></span></span>` : face}
               </a>`;
     }).join('');
@@ -283,24 +305,24 @@ function layoutMegaLabels() {
   const labels = [...box.querySelectorAll('.mega-label')];
   if (!labels.length || !box.clientWidth) return;
   labels.forEach((l) => { l.style.top = '0px'; });
-  const span = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.right]; };
-  const spans = labels.map(span);
-  // The track names between Playable and Complete share the first row (hidden on phones).
-  // Their CSS already stops short of Complete, so only the steps up to Playable are checked against them.
-  const zone = box.querySelector('.mega-zone');
-  const zoneSpan = zone && zone.getClientRects().length ? span(zone) : null;
-  const last = labels.length - 1;
-  const GAP = 10;
-  const clear = (a, b) => a[1] + GAP <= b[0] || b[1] + GAP <= a[0];
-  const fits = (rows) => spans.every((a, i) =>
-    (i % rows || i === last || !zoneSpan || clear(a, zoneSpan)) &&
-    spans.every((b, j) => j <= i || (j - i) % rows || clear(a, b)));
-  let rows = 1;
-  while (rows < labels.length && !fits(rows)) rows++;
+  const rects = labels.map((l) => l.getBoundingClientRect());
   const h = Math.max(...labels.map((l) => l.offsetHeight));
   const step = h + 6;
+  const zone = box.querySelector('.mega-zone');
+  const zoneRect = zone?.getClientRects().length ? zone.getBoundingClientRect() : null;
+  const GAP = 10;
+  const clear = (a, b) => a.right + GAP <= b.left || b.right + GAP <= a.left;
+  // Track names can wrap and extend into the next row.
+  const fits = (rows) => rects.every((a, i) => {
+    const top = a.top + (i % rows) * step;
+    const clearsZone = !zoneRect || top >= zoneRect.bottom || top + a.height <= zoneRect.top || clear(a, zoneRect);
+    return clearsZone && rects.every((b, j) => j <= i || (j - i) % rows || clear(a, b));
+  });
+  let rows = 1;
+  while (rows < labels.length && !fits(rows)) rows++;
   labels.forEach((l, i) => { l.style.top = `${(i % rows) * step}px`; });
-  box.style.height = `${(rows - 1) * step + h + 14}px`;
+  const zoneHeight = zoneRect ? zoneRect.bottom - box.getBoundingClientRect().top : 0;
+  box.style.height = `${Math.max((rows - 1) * step + h, zoneHeight) + 14}px`;
 }
 
 function renderHistory(history) {
@@ -327,7 +349,7 @@ function renderChanges(changes) {
   const items = [...changes].reverse().slice(0, 12);
   if (!items.length) { $('#changes').hidden = true; return; }
   const cls = { up: 'ck-up', down: 'ck-down', flag: 'ck-flag', new: 'ck-new', removed: 'ck-down', claim: 'ck-flag' };
-  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span><time>${esc(new Date(`${c.date}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time><span>${esc(c.text)}</span></li>`).join('');
+  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span><time>${esc(fmtDay(c.date, false))}</time><span>${esc(c.text)}</span></li>`).join('');
 }
 
 /* ---------- Race ---------- */
@@ -390,7 +412,7 @@ function renderPrivateBuilds() {
   $('#private-list').innerHTML = list.map(privateCard).join('');
 }
 
-// No score or rank: the stage it reports, how we know, and the public projects it builds on.
+// Private cards show the score, stage, evidence and the public projects they build on.
 function privateCard(e) {
   const url = effortUrl(e);
   const src = effortAvatar(e);
@@ -403,7 +425,7 @@ function privateCard(e) {
         <h3>${url ? `<a href="${esc(url)}">${esc(e.name)}</a>` : esc(e.name)}</h3>
         <p class="e-by">${esc(e.byline || '')}</p>
       </div>
-      <div class="pb-stage"><b>${pct(e._s.score)}<span>%</span></b><small>${esc(t('private.notRanked', { stage: msLabel(e._s.reached) }))}</small></div>
+      <div class="pb-stage"><b>${fmtTenths(e._s.score)}<span>${pctSign()}</span></b><small>${esc(t('private.notRanked', { stage: msLabel(e._s.reached) }))}</small></div>
     </div>
     <div class="tags">
       ${bases ? `<span class="tag tag-based">${t('private.basedOn', { names: bases })}</span>` : ''}
@@ -439,7 +461,7 @@ function buildPins(kids) {
   const maxLevel = Math.max(0, ...pins.map((q) => q.level));
   return { maxLevel, html: `<div class="bp-layer">${pins.map(({ p, i, x, level }) => `
     <a class="bp" href="#effort-${esc(p.id)}" style="left:${x}%;--i:${i};--lift:${level * 46}px"
-       data-tip-title="${esc(p.name)} · ${pct(p._s.score)}%" data-tip="${esc(t('private.pinTip', { stage: msLabel(p._s.reached) }))}">
+       data-tip-title="${esc(p.name)} · ${pct(p._s.score)}" data-tip="${esc(t('private.pinTip', { stage: msLabel(p._s.reached) }))}">
       <span class="bp-bubble">${buildFace(p)}<span class="bp-lock"><span class="pb-lock" aria-hidden="true"></span></span></span>
       <span class="bp-stem" aria-hidden="true"></span>
     </a>`).join('')}</div>` };
@@ -459,7 +481,7 @@ function onThisCode(e, kids) {
         <span class="otc-name">${self ? esc(r.name) : `<a href="#effort-${esc(r.id)}">${esc(r.name)}</a>`}</span>
         <span class="otc-badge ${self ? 'is-self' : ''}">${esc(self ? t('effort.thisRepo') : t('effort.privateBadge'))}</span>
         <span class="otc-stage">${esc(msLabel(r._s.reached))}</span>
-        <b>${pct(r._s.score)}%</b>
+        <b>${pct(r._s.score)}</b>
       </li>`;
     }).join('')}</ol>
   </div>`;
@@ -475,7 +497,7 @@ function ladderCells(e) {
   const steps = ['loads', 'boots', 'menu', 'world', 'playable'].map((k) =>
     `<span class="${st(ladderValue(g[k]))}" title="${esc(msDesc(MILESTONES.find((m) => m.key === k)))}">${esc(msLabel(k))}</span>`).join('');
   return `<div class="ladder">
-      <span class="${pastGroundwork ? 'is-reached' : st(gw)}" title="${esc(msDesc(MILESTONES[0]))}">${esc(pastGroundwork ? msLabel('groundwork') : t('effort.groundworkPct', { n: Math.round(gw * 100) }))}</span>
+      <span class="${pastGroundwork ? 'is-reached' : st(gw)}" title="${esc(msDesc(MILESTONES[0]))}">${esc(pastGroundwork ? msLabel('groundwork') : t('effort.groundworkPct', { n: fmtNumber(Math.round(gw * 100)) }))}</span>
       ${steps}
     </div>
     ${trackRow(e)}`;
@@ -483,7 +505,7 @@ function ladderCells(e) {
 
 // What each track reads as, in words: a written step, a frame rate or a stability label.
 function trackText(key, g, v) {
-  if (key === 'perf') return g.fps ? t('effort.fps', { n: Math.round(g.fps) }) : t('track.unmeasured');
+  if (key === 'perf') return g.fps ? t('effort.fps', { n: fmtNumber(Math.round(g.fps)) }) : t('track.unmeasured');
   if (key === 'stability') return stabLabel(stabilityKey(g.stability));
   const step = trackStep(key, v);
   return step ? stepLabel(key, step) : '';
@@ -524,35 +546,36 @@ function effortCard(e, rank, open, overallRank = null) {
     e.provenOn && ladderValue(e.groundwork?.proven) > 0 && `<span class="tag tag-proven" title="${esc(t('effort.runsTitle'))}">${esc(t('effort.runs', { x: e.provenOn }))}</span>`,
     stale && `<span class="tag tag-stale">${esc(t('effort.quiet', { n: Math.floor(daysSince(st.pushedAt)) }))}</span>`,
     st.missing && `<span class="tag tag-stale">${esc(t('effort.gone'))}</span>`,
-    st.dmca && `<a class="tag tag-stale" href="${esc(safeHttp(st.dmca.url))}" target="_blank" rel="noopener" title="${esc(t('effort.dmcaTitle'))}">${esc(t('effort.dmca', { date: st.dmca.date || '' }))}</a>`,
+    st.dmca && `<a class="tag tag-stale" href="${esc(safeHttp(st.dmca.url))}" target="_blank" rel="noopener" title="${esc(t('effort.dmcaTitle'))}">${esc(t('effort.dmca', { date: fmtProjectDate(st.dmca.date) }))}</a>`,
     // A recording that backs the entry up (owner-added), opened off-site.
     e.proof?.url && `<a class="tag tag-proof" href="${esc(safeHttp(e.proof.url))}" target="_blank" rel="noopener nofollow" title="${esc(e.proof.url)}">${esc(e.proof.label || 'Watch')} ↗</a>`,
   ].filter(Boolean).join('');
   const gwRows = GROUNDWORK.map((g) => {
     const v = Math.max(0, Math.min(1, +(e.groundwork?.[g.key]) || 0));
-    return `<div class="gw-row" title="${esc(gwDesc(g))}"><span>${esc(gwLabel(g))}</span><b>${Math.round(v * 100)}%</b><div class="gw-bar"><i data-width="${v * 100}"></i></div></div>`;
+    return `<div class="gw-row" title="${esc(gwDesc(g))}"><span>${esc(gwLabel(g))}</span><b>${pct(Math.round(v * 100))}</b><div class="gw-bar"><i data-width="${v * 100}"></i></div></div>`;
   }).join('');
   const claims = (e.claims || []).slice(0, 2).map((c) => `<div class="claim"><b>${esc(t('effort.claim'))}</b> “${esc(c.text)}”, ${esc(t('effort.mayMean'))} <em>${esc(claimLabel(c.milestone))}</em>. ${esc(t('effort.awaiting'))}</div>`).join('');
   const src = effortAvatar(e);
   const url = effortUrl(e);
   const external = hasRepo(e) ? ' target="_blank" rel="noopener"' : '';
+  const nukedTitle = e.nuked ? esc(t('effort.nukedTitle', { date: fmtProjectDate(e.nuked.at) })) : '';
   return `
   <li class="effort ${rank && rank <= 3 ? 'is-top' : ''}${e.nuked ? ' is-nuked' : ''}" id="effort-${esc(e.id)}">
-    <div class="e-rank">${e.nuked ? `<span class="nuke-rank" title="${esc(t('effort.nukedTitle', { date: e.nuked.at || '' }))}">${ICON.nuke}</span>` : rank}${overallRank ? `<small class="e-rank-overall" title="${esc(t('race.overallTitle'))}">${esc(t('race.overall', { n: overallRank }))}</small>` : ''}</div>
+    <div class="e-rank">${e.nuked ? `<span class="nuke-rank" title="${nukedTitle}">${ICON.nuke}</span>` : rank}${overallRank ? `<small class="e-rank-overall" title="${esc(t('race.overallTitle'))}">${esc(t('race.overall', { n: overallRank }))}</small>` : ''}</div>
     <div class="e-main">
-      ${e.nuked ? `<div class="nuke-banner" title="${esc(t('effort.nukedTitle', { date: e.nuked.at || '' }))}">${ICON.nuke}<b>${esc(t('effort.nuked'))}</b><span>${esc(e.nuked.note || '')}</span></div>` : ''}
+      ${e.nuked ? `<div class="nuke-banner" title="${nukedTitle}">${ICON.nuke}<b>${esc(t('effort.nuked'))}</b><span>${esc(e.nuked.note || '')}</span></div>` : ''}
       <div class="e-top">
         ${src ? `<img class="e-avatar" src="${esc(src)}" alt="" loading="lazy" data-hide-on-error>` : ''}
         <div class="e-title">
           <h3>${url ? `<a href="${esc(url)}"${external}>${esc(e.name)}</a>` : esc(e.name)}</h3>
           <p class="e-by">${hasRepo(e) ? `${esc(e.repo)}${e.branch && !['main', 'master'].includes(e.branch) ? ` · ${esc(t('effort.branch', { b: e.branch }))}` : ''}` : esc(e.byline || '')}</p>
         </div>
-        <div class="e-score"><b>${pct(s.score)}<span>%</span></b><small>${esc(msLabel(s.reached))}</small></div>
+        <div class="e-score"><b>${fmtTenths(s.score)}<span>${pctSign()}</span></b><small>${esc(msLabel(s.reached))}</small></div>
       </div>
       <div class="tags">${tags}</div>
       <p class="e-summary">${esc(e.summary)}</p>
       ${onThisCode(e, kids)}
-      <div class="bar${pins ? ' has-pins' : ''}"${pins?.maxLevel ? ` style="margin-top:${50 + pins.maxLevel * 46}px"` : ''} aria-label="${esc(t('effort.progressLabel', { name: e.name, n: pct(s.score) }))}">
+      <div class="bar${pins ? ' has-pins' : ''}"${pins?.maxLevel ? ` style="margin-top:${50 + pins.maxLevel * 46}px"` : ''} aria-label="${esc(t('effort.progressLabel', { name: e.name, n: fmtTenths(s.score) }))}">
         ${pins ? pins.html : ''}
         <div class="bar-track"><div class="bar-fill" data-width="${s.score}"></div><div class="bar-ticks">${ticks}</div></div>
         ${ladderCells(e)}
@@ -576,7 +599,7 @@ function effortCard(e, rank, open, overallRank = null) {
         ${st.commits7d != null ? `<span class="stat-i" title="${esc(t('effort.commitsTitle'))}">${ICON.commit}${esc(t('effort.commits', { n: st.commits7d >= 100 ? '100+' : st.commits7d }))}</span>` : ''}
         <span class="stat-i" title="${esc(t('effort.lastPush'))}">${ICON.clock}${esc(t('effort.pushed', { ago: ago(st.pushedAt) }))}</span>` : ''}
         <span class="spacer"></span>
-        <span class="w-muted" title="${esc(t('effort.reviewedTitle'))}">${esc(e.assessedBy === 'claude' ? t('effort.byClaude') : t('effort.reviewed'))} ${esc(e.assessedAt || '')}</span>
+        <span class="w-muted" title="${esc(t('effort.reviewedTitle'))}">${esc(e.assessedBy === 'claude' ? t('effort.byClaude') : t('effort.reviewed'))} ${esc(fmtProjectDate(e.assessedAt))}</span>
         <button class="toggle" data-toggle aria-expanded="${open}">${esc(open ? t('effort.hideDetails') : t('effort.details'))}</button>
         ${hasRepo(e) ? `<a class="gh-link" href="${esc(repoUrl(e.repo, e.branch))}" target="_blank" rel="noopener">${ICON.gh}GitHub</a>` : ''}
       </div>
@@ -588,7 +611,7 @@ function effortCard(e, rank, open, overallRank = null) {
 function renderWatchlist(data) {
   const rows = data.efforts.filter((e) => e.tier === 'watchlist').sort((a, b) => b._s.score - a._s.score || byStars(a, b));
   if (!rows.length) { $('#watchlist').hidden = true; return; }
-  foldLabel($('#watch-toggle'), t('fold.projects', { n: rows.length }));
+  foldLabel($('#watch-toggle'), t('fold.projects', { n: fmtNumber(rows.length) }));
   const head =['watch.project', 'watch.approach', 'watch.progress', 'watch.stars', 'watch.lastPush'].map((k) => `<span>${esc(t(k))}</span>`).join('');
   $('#watch-list').innerHTML = `
     <div class="w-row w-head" role="row">${head}</div>` +
@@ -596,7 +619,7 @@ function renderWatchlist(data) {
     <div class="w-row" role="row" id="effort-${esc(e.id)}">
       <div class="w-name"><a href="${esc(repoUrl(e.repo, e.branch))}" target="_blank" rel="noopener">${esc(e.name)}</a><p>${esc(e.summary)}</p></div>
       <span class="w-muted">${esc(e.approach)}${e.target && /gta|ps5/i.test(e.target) ? ` · ${esc(e.target)}` : ''}${e.gpu?.length ? `<span class="w-gpu">${gpuTags(e)}</span>` : ''}</span>
-      <div class="w-bar"><div class="bar-track"><div class="bar-fill" data-width="${e._s.score}"></div></div><b>${pct(e._s.score)}%</b></div>
+      <div class="w-bar"><div class="bar-track"><div class="bar-fill" data-width="${e._s.score}"></div></div><b>${pct(e._s.score)}</b></div>
       <span class="w-muted">★ ${fmtK(e.stats?.stars)}</span>
       <span class="w-muted">${esc(ago(e.stats?.pushedAt))}</span>
     </div>`).join('');
@@ -605,7 +628,7 @@ function renderWatchlist(data) {
 /* ---------- Toolkit ---------- */
 function renderTools(tools) {
   if (!tools.length) { $('#toolkit').hidden = true; return; }
-  foldLabel($('#tools-toggle'), t('fold.tools', { n: tools.length }));
+  foldLabel($('#tools-toggle'), t('fold.tools', { n: fmtNumber(tools.length) }));
   $('#tools-list').innerHTML = tools.map((x) => `
     <a class="tool" href="${esc(repoUrl(x.repo))}" target="_blank" rel="noopener">
       <span class="t-kind">${esc(x.kind)}</span>
@@ -638,7 +661,6 @@ function bindFolds() {
 
 /* ---------- News ---------- */
 const safeLink = (u) => (/^#[\w-]+$/.test(u || '') ? u : safeHttp(u));
-const fmtDay = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
 // A post's day and time in the reader's own time zone, or the day alone for older posts.
 const fmtWhen = (n) => {
   const at = newsTime(n);
@@ -718,9 +740,9 @@ function renderMethod() {
   $('#ladder-explain').innerHTML = MILESTONES.filter((m) => m.key !== 'complete').map((m, i) => `
     <li><span class="le-at">${i === 0 ? `0–${gwShare}` : m.at}</span><div><h4>${esc(msLabel(m.key))}</h4><p>${esc(msDesc(m))}</p></div></li>`).join('') +
     `<li class="le-tracks"><span class="le-at">${playAt}–100</span><div><h4>${esc(t('method.tracksTitle'))}</h4><p>${esc(t('method.tracksSub'))}</p>
-      <ul>${TRACKS.map((tk) => `<li><b>${esc(trackLabel(tk))}<span>${esc(t('method.pts', { n: Math.round(tk.weight * span * 10) / 10 }))}</span></b>${esc(trackDesc(tk))}${
+      <ul>${TRACKS.map((tk) => `<li><b>${esc(trackLabel(tk))}<span>${esc(t('method.pts', { n: fmtTenths(tk.weight * span) }))}</span></b>${esc(trackDesc(tk))}${
         tk.steps ? `<small>${tk.steps.map((s) => esc(stepLabel(tk.key, s))).join(' → ')}</small>` : ''}</li>`).join('')}</ul></div></li>`;
-  $('#gw-explain').innerHTML = GROUNDWORK.map((g) => `<li><b>${esc(gwLabel(g))}<span>${esc(t('method.pts', { n: Math.round(g.weight * gwShare * 10) / 10 }))}</span></b>${esc(gwDesc(g))}</li>`).join('');
+  $('#gw-explain').innerHTML = GROUNDWORK.map((g) => `<li><b>${esc(gwLabel(g))}<span>${esc(t('method.pts', { n: fmtTenths(g.weight * gwShare) }))}</span></b>${esc(gwDesc(g))}</li>`).join('');
 }
 
 /* ---------- Interaction ---------- */
@@ -795,7 +817,7 @@ function animateNumber(node, to) {
   const step = (now) => {
     const p = Math.min(1, (now - start) / dur);
     const eased = 1 - (1 - p) ** 3;
-    node.textContent = (to * eased).toFixed(to % 1 ? 1 : 0);
+    node.textContent = fmtNumber((to * eased).toFixed(to % 1 ? 1 : 0));
     if (p < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);

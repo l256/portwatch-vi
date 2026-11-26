@@ -1,4 +1,4 @@
-// Interface translations for the public pages (index.html, board.html).
+// Interface translations for the homepage (index.html).
 // UI strings live in assets/i18n/<code>.json; en.json is the fallback for any key a language lacks.
 // Tracker data (project summaries, news, changes) stays in English, so the scout needs no changes.
 // Milestone, groundwork and stability names come from scoring.js in English and are translated under
@@ -8,6 +8,7 @@ export const LANGS = [
   { code: 'en', name: 'English', short: 'EN' },
   { code: 'pt-BR', name: 'Português (Brasil)', short: 'PT' },
   { code: 'es', name: 'Español', short: 'ES' },
+  { code: 'ru-RU', name: 'Русский', short: 'RU' },
 ];
 const KEY = 'pw-lang';
 const CODES = LANGS.map((l) => l.code);
@@ -32,6 +33,7 @@ export function pickLang() {
     const low = String(l).toLowerCase();
     if (low.startsWith('pt')) return 'pt-BR';
     if (low.startsWith('es')) return 'es';
+    if (low === 'ru' || low.startsWith('ru-')) return 'ru-RU';
     if (low.startsWith('en')) return 'en';
   }
   return 'en';

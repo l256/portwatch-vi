@@ -338,6 +338,24 @@ html:not([lang="en"]) .nav-links a { padding-inline: 9px; }
 .pin-text { margin: 0; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, .95); white-space: pre-line; overflow-wrap: anywhere; }
 .pin-text a { color: #fff; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, .45); text-underline-offset: 2px; }
 .pin-text a:hover { text-decoration-color: #fff; }
+
+/* Community note under the pinned message: the same glass, quieter. */
+.mods {
+  padding: 14px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .18);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+}
+.mods-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; }
+.mods-title { font-size: 16px; font-weight: 800; line-height: 1.25; color: #fff; }
+.mods-by { margin: 4px 0 0; font-size: 12.5px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+.mods-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .2); color: #fff; transition: background .15s, border-color .15s; }
+.mods-ico svg { width: 20px; height: 20px; }
+.mods-ico:hover { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .4); }
+.mods-feats { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.mods-feats li { padding: 3px 8px; border-radius: 999px; background: rgba(255, 255, 255, .1); font-size: 11.5px; font-weight: 600; color: rgba(255, 255, 255, .85); }
 .pin-gif { display: block; max-width: 100%; max-height: 240px; margin-top: 10px; border-radius: 12px; }
 .pin-text[hidden] + .pin-gif { margin-top: 2px; }
 @keyframes pin-in { from { opacity: 0; transform: translateY(10px); } }
@@ -807,6 +825,7 @@ a.tag { text-decoration: none; }
 .tool h3 { font-size: 17px; font-weight: 800; }
 .tool p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; flex: 1; }
 .tool .t-meta { font-size: 12px; color: var(--faint); font-weight: 600; }
+
 
 /* ---------- Inbox ---------- */
 .inbox { display: grid; gap: 10px; }

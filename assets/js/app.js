@@ -96,6 +96,8 @@ async function main() {
   bindControls();
   bindFolds();
   observeBars();
+  // The browser jumps to #section before the data arrives, when everything above it is still short. Jump again now.
+  scrollToHash();
   trackView('/').then(watchViewers); // afterwards, so this visitor is in the count
 }
 
@@ -321,13 +323,32 @@ function renderHistory(history) {
     </svg>`;
 }
 
+function scrollToHash() {
+  let id = '';
+  try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+  const el = id && document.getElementById(id);
+  if (el && !el.hidden) el.scrollIntoView({ behavior: 'instant' });
+}
+
 /* ---------- Changes ---------- */
 function renderChanges(changes) {
   const list = $('#changes-list');
   const items = [...changes].reverse().slice(0, 12);
   if (!items.length) { $('#changes').hidden = true; return; }
   const cls = { up: 'ck-up', down: 'ck-down', flag: 'ck-flag', new: 'ck-new', removed: 'ck-down', claim: 'ck-flag' };
-  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span><time>${esc(new Date(`${c.date}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time><span>${esc(c.text)}</span></li>`).join('');
+  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span>${changeTime(c)}<span>${esc(c.text)}</span></li>`).join('');
+}
+
+// Day plus local time when the entry has `at` (added by the scout since Nov 2026); older entries only have `date`.
+function changeTime(c) {
+  const at = c.at ? new Date(c.at) : null;
+  if (!at || Number.isNaN(at.getTime())) {
+    return `<time datetime="${esc(c.date)}">${esc(new Date(`${c.date}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time>`;
+  }
+  const day = at.toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
+  const time = at.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+  const full = at.toLocaleString(locale(), { dateStyle: 'full', timeStyle: 'short' });
+  return `<time datetime="${esc(at.toISOString())}" title="${esc(full)}">${esc(day)} · ${esc(time)}</time>`;
 }
 
 /* ---------- Race ---------- */

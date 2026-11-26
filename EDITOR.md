@@ -34,7 +34,7 @@ The GitHub Actions scout (every 3 hours) does the mechanical work: stats, discov
    - read its README (`https://raw.githubusercontent.com/<repo>/<branch>/README.md`) and recent commits (`https://github.com/<repo>/commits/<branch>`)
    - update `groundwork` (four values from 0 to 1), `gta` (`loads`, `boots`, `menu`, `world`, `playable` as 0, 0.5 or 1; `story` and `render` as one of the step values in `TRACKS` in `scoring.js`, left at 0 until `playable` is 1; `fps` as a number; `stability` as one of unknown, constant, often, sometimes, rarely, stable), `provenOn`, `summary` (under 40 words), `highlights` and `blockers` (up to 3 each, under 20 words)
    - set `assessedAt` to today's date, `assessedBy: "claude"`, and `claims: []`
-   - if the score (see `scoring.js`) moves by 0.5 or more, or a milestone is reached, add a `changes` entry `{ "date", "kind": "up"|"down", "text" }`
+   - if the score (see `scoring.js`) moves by 0.5 or more, or a milestone is reached, add a `changes` entry `{ "date", "at", "kind": "up"|"down", "text" }` (`at` is the current UTC time as ISO 8601, e.g. `2026-11-24T14:05:00Z`)
    - if a project is gone or blocked, note it in `changes`
 5. **Review candidates.** For each `candidates[]` entry with `"status": "new"`, read its README and decide:
    - apply hard rule 6: substance only earns a review, never a tier or score

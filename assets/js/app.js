@@ -66,7 +66,7 @@ const ICON = {
   gh: '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 0Z"/></svg>',
 };
 
-const state = { data: null, filter: 'all', sort: 'score' };
+const state = { data: null, filter: 'all', sort: 'score', query: '', details: new Map() };
 
 async function main() {
   // The pinned message is optional: it loads alongside and never holds up or breaks the page.
@@ -220,6 +220,7 @@ function renderOverall(data) {
     // Between Playable and Complete there's no single next step: the four tracks fill it side by side.
     `<p class="mega-zone" data-tip="${esc(t('method.tracksSub'))}" data-tip-title="${esc(t('method.tracksTitle'))}">${TRACKS.map((tk) => esc(trackLabel(tk))).join(' · ')}</p>`;
   $('#mega-fill').dataset.width = ov.score;
+  $('#overall-progress').setAttribute('aria-valuenow', String(ov.score));
 
   const top = ov.ranked.slice(0, 6);
   const draw = () => { drawMarkers(top, leader); layoutMegaLabels(); };
@@ -267,7 +268,7 @@ function drawMarkers(ranked, leader) {
       const tip = priv
         ? `${msLabel(it.r.reached)} · ${t('private.markerTip', { names: (e.basedOn || []).map(effortName).join(', ') || '-' })}`
         : `${msLabel(it.r.reached)} · ${e.approach || ''}`;
-      return `<a class="marker ${e === leader ? 'is-leader' : ''}${priv ? ' is-private' : ''}" href="#effort-${esc(e.id)}" style="left:${it.a}px;bottom:${H - avatarY - 32}px;--i:${i}"
+      return `<a class="marker ${it.a > W / 2 ? 'is-right' : 'is-left'} ${e === leader ? 'is-leader' : ''}${priv ? ' is-private' : ''}" href="#effort-${esc(e.id)}" style="left:${it.a}px;bottom:${H - avatarY - 32}px;--i:${i}"
                 data-tip-title="${esc(e.name)} · ${pct(it.r.score)}%" data-tip="${esc(tip)}">
                 <span class="mk-name">${esc(e.name)} · ${pct(it.r.score)}%</span>
                 ${priv ? `<span class="mk-face">${face}<span class="bp-lock"><span class="pb-lock" aria-hidden="true"></span></span></span>` : face}
@@ -324,10 +325,83 @@ function renderHistory(history) {
 /* ---------- Changes ---------- */
 function renderChanges(changes) {
   const list = $('#changes-list');
-  const items = [...changes].reverse().slice(0, 12);
+  const items = [...changes].reverse();
   if (!items.length) { $('#changes').hidden = true; return; }
-  const cls = { up: 'ck-up', down: 'ck-down', flag: 'ck-flag', new: 'ck-new', removed: 'ck-down', claim: 'ck-flag' };
-  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span><time>${esc(new Date(`${c.date}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time><span>${esc(c.text)}</span></li>`).join('');
+  const kinds = new Set(['up', 'down', 'flag', 'new', 'removed', 'claim']);
+  const prev = $('#changes-prev');
+  const next = $('#changes-next');
+  const count = $('#changes-count');
+  const dialog = $('#change-reader');
+  const metadata = (c) => {
+    const kind = kinds.has(c.kind) ? c.kind : 'update';
+    const date = new Date(`${c.date}T12:00:00Z`);
+    const validDate = Number.isFinite(date.getTime());
+    return `<div class="change-meta">
+        <span class="change-kind change-kind-${kind}">${esc(t(`changes.kind.${kind}`))}</span>
+        ${validDate ? `<time datetime="${esc(c.date)}" title="${esc(date.toLocaleDateString(locale(), { dateStyle: 'long' }))}">${esc(date.toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time>` : ''}
+      </div>`;
+  };
+  // The compact preview never replaces the original report: the dialog shows it in full.
+  list.innerHTML = items.map((c, i) => `<li class="change">
+      ${metadata(c)}
+      <p class="change-preview">${esc(c.text)}</p>
+      <button class="change-read" type="button" data-change="${i}" aria-haspopup="dialog" aria-controls="change-reader" aria-label="${esc(t('changes.readLabel', { n: i + 1 }))}">${esc(t('changes.read'))}</button>
+    </li>`
+  ).join('');
+  const cards = [...list.children];
+  const behavior = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+  const move = (direction) => {
+    const gap = parseFloat(getComputedStyle(list).columnGap);
+    const step = cards[0].getBoundingClientRect().width + gap;
+    const page = Math.max(1, Math.floor((list.clientWidth + gap + 1) / step));
+    list.scrollBy({ left: direction * step * page, behavior: behavior() });
+  };
+  const update = () => {
+    const bounds = list.getBoundingClientRect();
+    const visible = cards.map((card, i) => ({ i, rect: card.getBoundingClientRect() }))
+      .filter(({ rect }) => Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left) >= rect.width / 2);
+    if (visible.length) count.textContent = t(visible.length === 1 ? 'changes.positionOne' : 'changes.position', { start: visible[0].i + 1, end: visible.at(-1).i + 1, total: items.length });
+    prev.disabled = list.scrollLeft <= 1;
+    next.disabled = list.scrollLeft + list.clientWidth >= list.scrollWidth - 1;
+  };
+  prev.onclick = () => move(-1);
+  next.onclick = () => move(1);
+  list.addEventListener('keydown', (ev) => {
+    if (ev.target !== list) return;
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+      ev.preventDefault();
+      move(ev.key === 'ArrowLeft' ? -1 : 1);
+    } else if (ev.key === 'Home' || ev.key === 'End') {
+      ev.preventDefault();
+      list.scrollTo({ left: ev.key === 'Home' ? 0 : list.scrollWidth, behavior: behavior() });
+    }
+  });
+  let frame;
+  const scheduleUpdate = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
+  list.addEventListener('scroll', scheduleUpdate, { passive: true });
+  new ResizeObserver(scheduleUpdate).observe(list);
+
+  let opener;
+  list.addEventListener('click', (ev) => {
+    const button = ev.target.closest('[data-change]');
+    if (!button) return;
+    const index = Number(button.dataset.change);
+    const item = items[index];
+    if (!item) return;
+    opener = button;
+    $('#change-reader-title').textContent = t('changes.detailTitle', { n: index + 1, total: items.length });
+    $('#change-reader-meta').innerHTML = metadata(item);
+    $('#change-reader-text').textContent = item.text;
+    dialog.showModal();
+    dialog.scrollTop = 0;
+  });
+  $('#change-reader-close').onclick = () => dialog.close();
+  dialog.addEventListener('click', (ev) => {
+    const rect = dialog.getBoundingClientRect();
+    if (ev.target === dialog && (ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom)) dialog.close();
+  });
+  dialog.addEventListener('close', () => opener?.focus({ preventScroll: true }));
+  update();
 }
 
 /* ---------- Race ---------- */
@@ -346,9 +420,11 @@ const gpuTags = (e) => (Array.isArray(e.gpu) ? e.gpu : []).filter((v) => GPU_CLA
 function renderFilterChips() {
   const inRace = state.data.efforts.filter((e) => e.tier === 'tracked' && !e.nuked && !isPrivateBuild(e));
   const brands = Object.keys(GPU_CLASS).filter((v) => inRace.some((e) => Array.isArray(e.gpu) && e.gpu.includes(v)));
-  $('#race-chips').innerHTML = `<button class="chip is-on" data-filter="all">${esc(t('race.all'))}</button>` +
-    brands.map((v) => `<button class="chip" data-filter="${esc(v)}" title="${esc(gpuTitle(v))}">${esc(v)}</button>`).join('');
+  $('#race-chips').innerHTML = `<button type="button" class="chip is-on" data-filter="all" aria-pressed="true">${esc(t('race.all'))}</button>` +
+    brands.map((v) => `<button type="button" class="chip" data-filter="${esc(v)}" aria-pressed="false" title="${esc(gpuTitle(v))}">${esc(v)}</button>`).join('');
 }
+
+const searchText = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
 
 function renderRace() {
   const { data, filter, sort } = state;
@@ -366,14 +442,25 @@ function renderRace() {
   };
   const ranked = [...data.efforts.filter((e) => e.tier === 'tracked' && !e.nuked && !isPrivateBuild(e))].sort(byScore);
   const rankedInFilter = list.filter((e) => !e.nuked).sort(byScore);
+  // Search narrows the visible list without changing a project's rank within its GPU group.
+  const query = searchText(state.query.trim());
+  if (query) list = list.filter((e) => searchText(`${e.name} ${e.repo || ''} ${e.byline || ''}`).includes(query));
   const filtered = filter !== 'all';
   list.sort(sorters[sort] || byScore);
-  $('#race-list').innerHTML = list.map((e, i) => {
+  $('#race-list').innerHTML = list.map((e) => {
     const overall = e.nuked ? null : ranked.indexOf(e) + 1;
     const rank = e.nuked ? null : filtered ? rankedInFilter.indexOf(e) + 1 : overall;
-    return effortCard(e, rank, sort === 'score' && !e.nuked ? i < 3 : false, filtered ? overall : null);
+    const open = state.details.get(e.id) ?? (sort === 'score' && rank <= 3);
+    return effortCard(e, rank, open, filtered ? overall : null);
   }).join('') ||
     `<li class="empty">${esc(t('race.empty'))}</li>`;
+  $('#race-count').textContent = t('race.results', { shown: list.length, total: ranked.length });
+  $('#race-reset').hidden = !query && !filtered;
+  $$('.chip[data-filter]').forEach((button) => {
+    const selected = button.dataset.filter === filter;
+    button.classList.toggle('is-on', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
   renderPrivateBuilds();
   observeBars();
 }
@@ -726,16 +813,31 @@ function renderMethod() {
 /* ---------- Interaction ---------- */
 function bindControls() {
   $$('.chip[data-filter]').forEach((b) => b.addEventListener('click', () => {
-    $$('.chip[data-filter]').forEach((x) => x.classList.toggle('is-on', x === b));
     state.filter = b.dataset.filter;
     renderRace();
   }));
+  const search = $('#race-search');
+  let searchTimer;
+  search.addEventListener('input', () => {
+    state.query = search.value;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderRace, 150);
+  });
+  $('#race-reset').addEventListener('click', () => {
+    clearTimeout(searchTimer);
+    state.query = '';
+    state.filter = 'all';
+    search.value = '';
+    renderRace();
+    search.focus({ preventScroll: true });
+  });
   $('#sort').addEventListener('change', (ev) => { state.sort = ev.target.value; renderRace(); });
   $('#race-list').addEventListener('click', (ev) => {
     const btn = ev.target.closest('[data-toggle]');
     if (!btn) return;
     const det = btn.closest('.effort').querySelector('.e-details');
     det.hidden = !det.hidden;
+    state.details.set(btn.closest('.effort').id.replace(/^effort-/, ''), !det.hidden);
     btn.setAttribute('aria-expanded', String(!det.hidden));
     btn.textContent = det.hidden ? t('effort.details') : t('effort.hideDetails');
     observeBars();

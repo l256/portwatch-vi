@@ -1,0 +1,90 @@
+/* Home page: quieter surfaces and a browsable project directory.
+   Keep the shared article/dashboard styles and the score gradient intact. */
+.home { --radius: 12px; --radius-sm: 8px; }
+.home .card, .home .effort, .home .story { box-shadow: none; }
+.home .effort { animation: none; transition: border-color .15s; }
+.home .effort:hover, .home .story:hover { box-shadow: none; transform: none; border-color: var(--line-2); }
+.home .effort.is-top .e-rank { background: none; color: var(--ink-2); }
+.home .e-rank { font-size: 28px; font-weight: 600; }
+.home .e-score b { font-size: 30px; font-weight: 700; }
+.home .overall { border-radius: 12px; }
+.home .big-score { background: none; color: var(--ink); font-weight: 700; }
+.home .ov-stat { background: none; border-radius: 0; border-left: 1px solid var(--line-2); }
+.home .marker .mk-name { max-width: min(210px, 60vw); overflow: hidden; text-overflow: ellipsis; border-radius: 4px; }
+.home .marker.is-right .mk-name { right: 0; }
+.home .marker.is-left .mk-name { left: 0; }
+.home .marker:focus-visible .mk-name { opacity: 1; }
+.home .tag { border-radius: 4px; }
+.home .toggle, .home .gh-link, .home .more-link { border-radius: 6px; min-height: 40px; }
+.home .toggle { padding-inline: 14px; }
+.home .e-foot { gap: 8px 16px; }
+.home .story h3 { font-weight: 700; }
+.home .story time { color: var(--muted); }
+.home .changes-card { border: 0; border-block: 1px solid var(--line-2); border-radius: 0; padding-inline: 0; background: transparent; }
+.home .changes-card::before { content: none; }
+.home .change { background: var(--surface); border-radius: 8px; }
+.home .change-kind { padding: 0; background: none; font-size: 12px; }
+.home .changes-arrow { background: var(--surface); color: var(--ink-2); border-color: var(--line-2); border-radius: 6px; }
+.home .changes-arrow:hover:not(:disabled) { background: var(--soft); }
+.home .change-read { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+.home .hero { border-radius: 12px; }
+.home .hero-inner > *, .home .hero-side > * { min-width: 0; }
+.home .follow-x, .home .star-gh { background: rgba(10, 12, 18, .65); border: 1px solid rgba(255, 255, 255, .45); border-radius: 6px; box-shadow: none; padding: 7px 12px; }
+.home .follow-x:hover, .home .star-gh:hover { box-shadow: none; transform: none; background: rgba(10, 12, 18, .85); }
+.home .follow-x svg, .home .star-gh svg { width: 22px; height: 22px; }
+.home .countdown, .home .pinned { border-radius: 10px; box-shadow: none; background: rgba(15, 19, 26, .8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.home .countdown.is-released { border-color: rgba(255, 255, 255, .3); }
+.home .pin-avatar { background: rgba(255, 255, 255, .25); box-shadow: none; }
+.home .pin-icon { filter: none; }
+.home .pin-bubble { border-radius: 6px; box-shadow: none; background: transparent; padding: 0; }
+.home .pin-bubble { border: 0; }
+.home .pin-bubble::before { content: none; }
+.home .mega-fill::after { animation: none; background: none; }
+
+/* One place to find a project, narrow by GPU, and choose its ordering. */
+.race-toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 20px; padding-block: 18px; border-block: 1px solid var(--line-2); }
+.race-search { display: grid; gap: 7px; flex: 1 1 260px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.race-search input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input-line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; font-weight: 400; }
+.race-search input::placeholder { color: var(--muted); }
+.race-toolbar .controls { gap: 12px 20px; }
+.race-toolbar .chips { border-radius: 6px; padding: 2px; flex-wrap: wrap; }
+.race-toolbar .chip { border-radius: 4px; min-height: 40px; }
+.race-toolbar .sort { display: grid; gap: 7px; }
+.race-toolbar .sort select { min-height: 44px; border-radius: 6px; }
+.race-results { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; min-height: 52px; padding-block: 4px; font-size: 13px; color: var(--muted); }
+.race-results p { margin: 0; }
+.race-results button { min-height: 44px; border: 0; padding: 6px 0; background: transparent; color: var(--ink); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.home .empty { padding: 32px 20px; border: 1px dashed var(--line-2); border-radius: 8px; text-align: center; }
+
+@media (max-width: 760px) {
+  /* Keep section links available instead of hiding navigation on phones. */
+  .home .nav-inner { height: auto; min-height: 64px; flex-wrap: wrap; gap: 10px; padding-top: 12px; }
+  .home .nav-links { display: flex; order: 5; flex: 0 0 100%; margin: 0; padding-bottom: 8px; gap: 4px; overflow-x: auto; }
+  .home .nav-links a { padding: 10px 12px; border-radius: 4px; font-size: 13px; }
+  .home .section, .home .effort, .home .pb { scroll-margin-top: 44px; }
+  .race-toolbar { gap: 14px; }
+  .race-search { flex-basis: 100%; }
+  .race-toolbar .controls { width: 100%; justify-content: space-between; align-items: flex-end; }
+  .home .effort { grid-template-columns: 28px minmax(0, 1fr); padding: 18px 12px; gap: 8px; }
+  .home .e-rank { font-size: 20px; text-align: left; }
+  .home .e-top { gap: 10px; }
+  .home .e-title h3 { font-size: 19px; }
+  .home .e-avatar { width: 36px; height: 36px; border-radius: 6px; }
+  .home .e-score b { font-size: 26px; }
+  .home .e-score small { display: block; max-width: 12ch; }
+  .home .e-details { grid-template-columns: minmax(0, 1fr); }
+  .home .otc { padding-inline: 8px; }
+  .home .otc li { grid-template-columns: 16px 24px minmax(0, 1fr) 42px; gap: 6px; }
+  .home .otc-badge { grid-column: 3; grid-row: 2; justify-self: start; }
+  .home .otc li b { grid-column: 4; grid-row: 1; }
+  .home .otc-stage { display: none; }
+  .home .hero { margin-inline: 6px; }
+}
+@media (max-width: 400px) {
+  .home .wrap { width: calc(100% - 28px); }
+  .home .cd-digits { gap: 5px; }
+  .home .cd-digits span { font-size: 36px; }
+  .home .cd-digits i { font-size: 24px; }
+  .race-toolbar .controls { align-items: stretch; }
+  .race-toolbar .sort { width: 100%; }
+}

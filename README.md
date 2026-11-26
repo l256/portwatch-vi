@@ -62,7 +62,14 @@ The hero shows an original sunset illustration until the photo loads. The photo 
 
 ## Local preview
 
-Any static server works. On Windows without Node or Python:
+Any static server works. On macOS or Linux (with Python 3 or Node.js):
+
+```bash
+python3 -m http.server 8080
+# or: npx serve -l 8080
+```
+
+On Windows without Node or Python:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/serve.ps1 -Port 8080

@@ -262,15 +262,25 @@ create policy "admins read views" on public.pageviews for select to authenticate
 -- Older rows have w = 1.
 alter table public.pageviews add column if not exists w smallint not null default 1;
 
+-- The weight each view carries is set here, not by the browser. track_view used to store the p_w the client sent
+-- (clamped to 1-50), so a script calling the RPC directly could give every made-up session the maximum weight and
+-- inflate the live count. Keep this value equal to SAMPLE in assets/js/backend.js; to change it later, run
+--   update private.settings set value = '<SAMPLE>' where key = 'view_weight';
+insert into private.settings (key, value) values ('view_weight', '20') on conflict (key) do nothing;
+
 -- The 4-argument version is dropped first: two overloads would leave PostgREST unable to choose. p_w has no
 -- default, so old copies of the site that still send only the 4 original arguments match nothing and aren't counted.
+-- p_w stays in the signature so the site's current calls keep matching, but its value is ignored.
 drop function if exists public.track_view(text, text, text, boolean);
 drop function if exists public.track_view(text, text, text, boolean, integer);
 create or replace function public.track_view(p_page text, p_w integer, p_ref text default null, p_sid text default null, p_new boolean default false) returns void
 language sql security definer set search_path = '' as $$
   insert into public.pageviews (page, ref, sid, new_session, w)
   values (left(coalesce(p_page, '/'), 120), left(nullif(p_ref, ''), 120), left(p_sid, 40), coalesce(p_new, false),
-          least(greatest(coalesce(p_w, 1), 1), 50));
+          least(greatest(coalesce(
+            (select case when s.value ~ '^[0-9]{1,2}$' then s.value::integer end
+               from private.settings s where s.key = 'view_weight'),
+            1), 1), 50));
 $$;
 revoke all on function public.track_view(text, integer, text, text, boolean) from public;
 grant execute on function public.track_view(text, integer, text, text, boolean) to anon, authenticated;

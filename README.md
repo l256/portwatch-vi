@@ -49,12 +49,12 @@ Instead of `ANTHROPIC_API_KEY`, a scheduled Claude session on the maintainer's P
 
 Everything lives in `data/tracker.json`:
 
-- `efforts[]`: each effort has a `tier` (`tracked` puts it in the race, `watchlist` lists it below). Each also carries `groundwork` (four 0–1 values), `gta` (`loads`/`boots`/`menu`/`ingame` are 0, 0.5 or 1, plus `fps` and `stability`), and short `highlights` and `blockers`.
+- `efforts[]`: each effort has a `tier` (`tracked` puts it in the race, `watchlist` lists it below). Each also carries `groundwork` (four 0–1 values), `gta` (`loads`/`boots`/`menu`/`world`/`playable` are 0, 0.5 or 1, plus `story`, `render`, `fps` and `stability`), and short `highlights` and `blockers`.
 - `exe`: drives the countdown. If the release time is announced, set `expectedAt` (ISO time) and `timeAnnounced: true`. When it drops, set `status: "released"` and `releasedAt`, and the countdown turns into a "time since release" clock.
 - `candidates[]`: move one into `efforts` to promote it, or into `ignored` to dismiss it.
 - `site.heroImage`: the hero photo (see below). An optional `site.heroCredit` adds a credit line under it.
 
-Scoring is in `assets/js/scoring.js`, shared by the site and the scout. Groundwork fills 0–25%. After that, milestones sit at Exe runs 25, First frame 40, Main menu 55, In-game 70, 30 FPS 85 and Stable 100.
+Scoring is in `assets/js/scoring.js`, shared by the site and the scout. Groundwork fills 0–10%. After that, the ladder climbs through Exe runs 10, First frame 20, Main menu 30, In the world 40 and Playable 50, and four tracks (story, rendering, performance, stability) fill 50–100% up to Complete 100.
 
 ## Hero photo
 

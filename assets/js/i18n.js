@@ -8,6 +8,7 @@ export const LANGS = [
   { code: 'en', name: 'English', short: 'EN' },
   { code: 'pt-BR', name: 'Português (Brasil)', short: 'PT' },
   { code: 'es', name: 'Español', short: 'ES' },
+  { code: 'nl', name: 'Nederlands', short: 'NL' },
 ];
 const KEY = 'pw-lang';
 const CODES = LANGS.map((l) => l.code);
@@ -32,6 +33,7 @@ export function pickLang() {
     const low = String(l).toLowerCase();
     if (low.startsWith('pt')) return 'pt-BR';
     if (low.startsWith('es')) return 'es';
+    if (low.startsWith('nl')) return 'nl';
     if (low.startsWith('en')) return 'en';
   }
   return 'en';
@@ -73,7 +75,7 @@ export function tr(key, english, vars) {
   return fill(lang !== 'en' && typeof dict[key] === 'string' ? dict[key] : english, vars);
 }
 
-// Counted strings: key_one for exactly 1, key_other otherwise (right for en, pt-BR and es).
+// Counted strings: key_one for exactly 1, key_other otherwise (right for en, pt-BR, es and nl).
 export function tn(key, n, vars) {
   return t(`${key}_${n === 1 ? 'one' : 'other'}`, { n, ...vars });
 }

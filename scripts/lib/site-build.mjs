@@ -29,6 +29,7 @@ const fmtWhen = (n) => {
 const whenTag = (n) => `<time datetime="${esc(newsTime(n) || n.date)}">${esc(fmtWhen(n))}</time>`;
 const jsonLd = (o) => JSON.stringify(o, null, 1).replace(/</g, '\\u003c');
 const isoTime = (s) => { const t = Date.parse(s || ''); return Number.isFinite(t) ? new Date(t).toISOString() : null; };
+const hashId = (s) => ([...String(s)].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 0x01000193), 0x811c9dc5) >>> 0).toString(36);
 
 /** News entries that get a page: valid slug id, date and title; newest first; duplicate ids dropped. */
 export function publishableNews(data) {
@@ -265,6 +266,36 @@ ${items}
 `;
 }
 
+function changesFeed(changes, updated) {
+  const list = [...(changes || [])].filter((c) => c && isDay(c.date) && c.text).reverse().slice(0, 40);
+  const items = list.map((c) => {
+    const text = String(c.text);
+    const cut = text.search(/[:.]\s/);
+    const title = text.length <= 96 ? text : cut > 12 && cut <= 96 ? text.slice(0, cut) : `${text.slice(0, 93).trimEnd()}…`;
+    const guid = `portwatch-vi-change-${c.date}-${c.kind || 'update'}-${hashId(text)}`;
+    return `  <item>
+    <title>${esc(title)}</title>
+    <link>${SITE_URL}#changes</link>
+    <guid isPermaLink="false">${esc(guid)}</guid>
+    <pubDate>${new Date(`${c.date}T12:00:00Z`).toUTCString()}</pubDate>
+    ${c.kind ? `<category>${esc(c.kind)}</category>\n    ` : ''}<description>${esc(text)}</description>
+  </item>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>PortWatch VI changes</title>
+  <link>${SITE_URL}#changes</link>
+  <description>Milestone breakthroughs, score changes, new efforts and status updates tracked by PortWatch VI.</description>
+  <language>en</language>
+  <lastBuildDate>${new Date(updated || Date.now()).toUTCString()}</lastBuildDate>
+  <atom:link href="${SITE_URL}changes.xml" rel="self" type="application/rss+xml"/>
+${items}
+</channel>
+</rss>
+`;
+}
+
 function sitemap(entries) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -288,6 +319,7 @@ export function buildSite(data) {
   const files = {
     'news/index.html': archivePage(news),
     'news/feed.xml': rssFeed(news, updated),
+    'changes.xml': changesFeed(data.changes, updated),
     'sitemap.xml': sitemap(entries),
     [`${INDEXNOW_KEY}.txt`]: INDEXNOW_KEY,
   };

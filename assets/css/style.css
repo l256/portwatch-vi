@@ -455,6 +455,8 @@ html:not([lang="en"]) .nav-links a { padding-inline: 9px; }
 .changes .ck-down { background: var(--red); }
 .changes .ck-flag { background: var(--orange); }
 .changes .ck-new { background: var(--pink); }
+.changes-rss { flex: none; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; color: var(--muted); text-decoration: none; transition: background .15s, color .15s; }
+.changes-rss:hover { background: var(--soft); color: var(--ink); }
 
 /* Controls */
 .controls { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -896,6 +898,7 @@ a.tag { text-decoration: none; }
   .footer-inner { grid-template-columns: 1fr; }
   .footer-meta { text-align: left; }
   .changes-card { flex-direction: column; align-items: stretch; gap: 10px; }
+  .changes-rss { align-self: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

@@ -3398,6 +3398,16 @@
         "stars": 12,
         "pushedAt": "2026-11-25T14:40:12Z"
       }
+    },
+    {
+      "repo": "liam-mcelhaney122/gta6-modding-sdk",
+      "name": "gta6-modding-sdk",
+      "kind": "Modding SDK",
+      "desc": "Single-player modding SDK for 1.0.2.1: C ABI, C/C++/Python/Luau native bindings and a runtime DLL. Self-tested offline; not yet run in-game.",
+      "stats": {
+        "stars": 0,
+        "pushedAt": "2026-11-25T18:38:47Z"
+      }
     }
   ],
   "candidates": [

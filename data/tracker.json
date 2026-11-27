@@ -6662,13 +6662,6 @@
       "pushedAt": "2026-11-24T07:27:11Z"
     },
     {
-      "repo": "PlutonusDev/OpenEra",
-      "reason": "thin (substance 19)",
-      "auto": true,
-      "seenAt": "2026-11-24",
-      "pushedAt": "2026-11-24T12:51:17Z"
-    },
-    {
       "repo": "aldr888/porto-sol",
       "reason": "off-topic (original fan game, not a port)",
       "auto": true,

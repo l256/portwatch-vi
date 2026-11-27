@@ -15,9 +15,12 @@ const repoUrl = (repo, branch) => (REPO_RE.test(repo || '') ? `https://github.co
 const owner = (repo) => (repo || '').split('/')[0];
 const avatar = (repo) => (REPO_RE.test(repo || '') ? `https://github.com/${encodeURIComponent(owner(repo))}.png?size=88` : '');
 // Efforts with no public code have `repo: null`. They may give a local `avatar` image and a `link` to our own article.
+// An effort may set `home` to its own repository URL when the code does not live on GitHub (e.g. it moved
+// to a self-hosted forge); `repo` then keeps feeding the scout and the stats while `home` is the linked home.
 const hasRepo = (e) => REPO_RE.test(e.repo || '');
+const homeUrl = (e) => (/^https:\/\/[^\s<>"']+$/.test(e.home || '') ? e.home : '');
 const effortAvatar = (e) => (/^assets\/img\/[\w/.-]+$/.test(e.avatar || '') ? e.avatar : avatar(e.repo));
-const effortUrl = (e) => (hasRepo(e) ? repoUrl(e.repo, e.branch) : /^news\/[a-z0-9-]+\.html$/.test(e.link || '') ? e.link : '');
+const effortUrl = (e) => (homeUrl(e) || (hasRepo(e) ? repoUrl(e.repo, e.branch) : /^news\/[a-z0-9-]+\.html$/.test(e.link || '') ? e.link : ''));
 const safeHttp = (u) => (/^https:\/\//.test(u || '') ? u : '#');
 const pct = (v) => `${Math.round(v * 10) / 10}`;
 
@@ -64,6 +67,8 @@ const ICON = {
   commit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 5a3 3 0 0 1 2.9 2.2H15v1.6h-4.1a3 3 0 0 1-5.8 0H1V7.2h4.1A3 3 0 0 1 8 5Zm0 1.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/></svg>',
   clock: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.5V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   gh: '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 0Z"/></svg>',
+  // Arrow leaving a box: a repository hosted outside GitHub.
+  ext: '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5"/></svg>',
 };
 
 const state = { data: null, filter: 'all', sort: 'score' };
@@ -535,7 +540,7 @@ function effortCard(e, rank, open, overallRank = null) {
   const claims = (e.claims || []).slice(0, 2).map((c) => `<div class="claim"><b>${esc(t('effort.claim'))}</b> “${esc(c.text)}”, ${esc(t('effort.mayMean'))} <em>${esc(claimLabel(c.milestone))}</em>. ${esc(t('effort.awaiting'))}</div>`).join('');
   const src = effortAvatar(e);
   const url = effortUrl(e);
-  const external = hasRepo(e) ? ' target="_blank" rel="noopener"' : '';
+  const external = (hasRepo(e) || homeUrl(e)) ? ' target="_blank" rel="noopener"' : '';
   return `
   <li class="effort ${rank && rank <= 3 ? 'is-top' : ''}${e.nuked ? ' is-nuked' : ''}" id="effort-${esc(e.id)}">
     <div class="e-rank">${e.nuked ? `<span class="nuke-rank" title="${esc(t('effort.nukedTitle', { date: e.nuked.at || '' }))}">${ICON.nuke}</span>` : rank}${overallRank ? `<small class="e-rank-overall" title="${esc(t('race.overallTitle'))}">${esc(t('race.overall', { n: overallRank }))}</small>` : ''}</div>
@@ -578,7 +583,7 @@ function effortCard(e, rank, open, overallRank = null) {
         <span class="spacer"></span>
         <span class="w-muted" title="${esc(t('effort.reviewedTitle'))}">${esc(e.assessedBy === 'claude' ? t('effort.byClaude') : t('effort.reviewed'))} ${esc(e.assessedAt || '')}</span>
         <button class="toggle" data-toggle aria-expanded="${open}">${esc(open ? t('effort.hideDetails') : t('effort.details'))}</button>
-        ${hasRepo(e) ? `<a class="gh-link" href="${esc(repoUrl(e.repo, e.branch))}" target="_blank" rel="noopener">${ICON.gh}GitHub</a>` : ''}
+        ${(hasRepo(e) || homeUrl(e)) ? `<a class="gh-link" href="${esc(url)}" target="_blank" rel="noopener">${homeUrl(e) ? ICON.ext : ICON.gh}${homeUrl(e) ? esc(new URL(homeUrl(e)).host) : 'GitHub'}</a>` : ''}
       </div>
     </div>
   </li>`;
@@ -594,7 +599,7 @@ function renderWatchlist(data) {
     <div class="w-row w-head" role="row">${head}</div>` +
     rows.map((e) => `
     <div class="w-row" role="row" id="effort-${esc(e.id)}">
-      <div class="w-name"><a href="${esc(repoUrl(e.repo, e.branch))}" target="_blank" rel="noopener">${esc(e.name)}</a><p>${esc(e.summary)}</p></div>
+      <div class="w-name"><a href="${esc(effortUrl(e) || '#')}" target="_blank" rel="noopener">${esc(e.name)}</a><p>${esc(e.summary)}</p></div>
       <span class="w-muted">${esc(e.approach)}${e.target && /gta|ps5/i.test(e.target) ? ` · ${esc(e.target)}` : ''}${e.gpu?.length ? `<span class="w-gpu">${gpuTags(e)}</span>` : ''}</span>
       <div class="w-bar"><div class="bar-track"><div class="bar-fill" data-width="${e._s.score}"></div></div><b>${pct(e._s.score)}%</b></div>
       <span class="w-muted">★ ${fmtK(e.stats?.stars)}</span>

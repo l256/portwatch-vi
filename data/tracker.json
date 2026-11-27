@@ -907,6 +907,7 @@
       "name": "DexNom",
       "repo": "DexNom/VIctory",
       "branch": "main",
+      "home": "https://git.avatarmanz.com/dexnom/VIctory",
       "tier": "tracked",
       "gpu": [
         "AMD"

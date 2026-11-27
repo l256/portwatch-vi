@@ -75,6 +75,8 @@
   "ov.privateOn": "versión privada basada en {names}.",
 
   "changes.title": "Qué cambió",
+  "changes.showAll": "Mostrar todas las {n} actualizaciones",
+  "changes.collapse": "Contraer",
 
   "race.kicker": "Clasificación",
   "race.title": "La carrera",

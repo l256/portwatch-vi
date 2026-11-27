@@ -322,12 +322,70 @@ function renderHistory(history) {
 }
 
 /* ---------- Changes ---------- */
+// Latest changes, grouped by day and newest first. Each day and each update gets an anchor
+// (#changes-<date>-<n>) so it can be linked to. Old entries without a timestamp (`at`) or an
+// explicit `id` still render fine. A toggle reveals the older days beyond the latest few updates.
+let changesExpanded = false;
+const CHANGES_LIMIT = 12;
+
+const fmtDayHead = (iso) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+  return Number.isFinite(d.getTime())
+    ? d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : String(iso || '');
+};
+const fmtDayTime = (iso) => {
+  const d = new Date(iso);
+  return Number.isFinite(d.getTime()) ? d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }) : '';
+};
+
 function renderChanges(changes) {
-  const list = $('#changes-list');
-  const items = [...changes].reverse().slice(0, 12);
-  if (!items.length) { $('#changes').hidden = true; return; }
+  const box = $('#changes-list');
+  const all = Array.isArray(changes) ? changes : [];
+  if (!all.length) { $('#changes').hidden = true; return; }
+  $('#changes').hidden = false;
+
+  // Newest first, and only the latest CHANGES_LIMIT unless expanded.
+  const visible = changesExpanded ? all : all.slice(-CHANGES_LIMIT);
+
+  // Group by calendar day, newest day first.
+  const groups = [];
+  for (let i = visible.length - 1; i >= 0; i--) {
+    const c = visible[i];
+    const key = String(c.date || '').slice(0, 10);
+    const g = groups[groups.length - 1];
+    if (g && g.key === key) g.items.push(c);
+    else groups.push({ key, date: c.date, items: [c] });
+  }
+
   const cls = { up: 'ck-up', down: 'ck-down', flag: 'ck-flag', new: 'ck-new', removed: 'ck-down', claim: 'ck-flag' };
-  list.innerHTML = items.map((c) => `<li><span class="ck ${cls[c.kind] || ''}"></span><time>${esc(new Date(`${c.date}T12:00:00Z`).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }))}</time><span>${esc(c.text)}</span></li>`).join('');
+  box.innerHTML = groups.map((g) => {
+    const itemsHtml = g.items.map((c, idx) => {
+      const id = c.id ? esc(c.id) : `${g.key}-${idx}`;
+      const time = c.at ? `<time class="change-time" datetime="${esc(c.at)}">${esc(fmtDayTime(c.at))}</time>` : '';
+      return `<li class="change" id="changes-${id}">
+        <a class="ck-anchor" href="#changes-${id}" aria-hidden="true" tabindex="-1"></a>
+        <span class="ck ${cls[c.kind] || ''}"></span>
+        ${time}
+        <span class="change-text">${esc(c.text)}</span>
+      </li>`;
+    }).join('');
+    return `<section class="changes-day" id="changes-${esc(g.key)}">
+      <h3 class="changes-day-head"><a href="#changes-${esc(g.key)}">${esc(fmtDayHead(g.date))}</a></h3>
+      <ul class="changes-items">${itemsHtml}</ul>
+    </section>`;
+  }).join('');
+
+  bindChangesToggle(all.length);
+}
+
+function bindChangesToggle(total) {
+  const btn = $('#changes-toggle');
+  if (!btn) return;
+  if (total <= CHANGES_LIMIT) { btn.hidden = true; return; }
+  btn.hidden = false;
+  btn.textContent = changesExpanded ? t('changes.collapse') : t('changes.showAll', { n: total });
+  btn.onclick = () => { changesExpanded = !changesExpanded; renderChanges(state.data.changes || []); };
 }
 
 /* ---------- Race ---------- */

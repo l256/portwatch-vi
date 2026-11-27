@@ -40,7 +40,7 @@ if (env.ANTHROPIC_API_KEY && newsDue) {
     const fresh = await writeNews({ existing: data.news || [], today, apiKey: env.ANTHROPIC_API_KEY });
     if (fresh.length) {
       data.news = [...fresh, ...(data.news || [])].slice(0, 40);
-      for (const n of fresh) data.changes.push({ date: today, kind: 'new', text: `News: ${n.title}` });
+      for (const n of fresh) data.changes.push({ date: today, kind: 'new', text: `News: ${n.title}`, at: new Date().toISOString() });
       data.changes = data.changes.slice(-80);
     }
     summary.news = fresh.length;

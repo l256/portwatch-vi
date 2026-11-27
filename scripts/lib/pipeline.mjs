@@ -32,7 +32,7 @@ export async function runScout(data, opts = {}) {
   const sinceDate = scout.since || '2026-11-19';
   const summary = { refreshed: 0, readmeChanged: 0, gone: 0, discovered: 0, newCandidates: 0, flagged: 0, assessed: 0, promoted: 0, errors: [], mentions: {} };
   const changes = (data.changes ||= []);
-  const addChange = (kind, text) => changes.push({ date: today, kind, text });
+  const addChange = (kind, text, extra = {}) => changes.push({ date: today, kind, text, at: new Date().toISOString(), ...extra });
   const prevScores = new Map(data.efforts.map((e) => [e.id, scoreEffort(e).score]));
   const prevLeader = overall(data.efforts).leader?.effort?.id;
   const errorOut = (where, err) => {

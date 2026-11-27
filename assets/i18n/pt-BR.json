@@ -75,6 +75,8 @@
   "ov.privateOn": "versão privada baseada em {names}.",
 
   "changes.title": "O que mudou",
+  "changes.showAll": "Mostrar todas as {n} atualizações",
+  "changes.collapse": "Recolher",
 
   "race.kicker": "Ranking",
   "race.title": "A corrida",

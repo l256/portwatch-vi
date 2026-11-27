@@ -75,6 +75,8 @@
   "ov.privateOn": "private build on {names}.",
 
   "changes.title": "What changed",
+  "changes.showAll": "Show all {n} updates",
+  "changes.collapse": "Collapse",
 
   "race.kicker": "Leaderboard",
   "race.title": "The race",

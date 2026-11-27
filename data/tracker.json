@@ -7300,7 +7300,7 @@
     },
     {
       "repo": "LukaManstein/CHIMERA",
-      "reason": "Built on victory-perf (a victory-fork fork) and advertises a Telegram group; no results of its own",
+      "reason": "Main branch is built on victory-perf; the turbo branch tracks current victory-fork. The Telegram link has been removed from the README. A boat-chase playthrough is self-reported video, not independently reproduced.",
       "seenAt": "2026-11-25"
     },
     {

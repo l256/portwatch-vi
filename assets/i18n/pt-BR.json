@@ -263,6 +263,7 @@
   "footer.data": "Dados:",
   "footer.dataTail": ", atualizados a cada 3 horas pelo robô de busca.",
   "footer.scoutRun": "Última execução do robô de busca {ago}",
+  "footer.contributors": "Colaboradores:",
 
   "error.load": "Não foi possível carregar os dados do rastreador: {msg}",
 

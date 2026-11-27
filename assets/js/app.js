@@ -96,6 +96,7 @@ async function main() {
   bindControls();
   bindFolds();
   observeBars();
+  renderContributors();
   trackView('/').then(watchViewers); // afterwards, so this visitor is in the count
 }
 
@@ -799,6 +800,40 @@ function animateNumber(node, to) {
     if (p < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
+}
+
+const CONTRIB_CACHE = 'pw-contribs';
+const LOGIN_RE = /^[\w-]+$/;
+
+async function renderContributors() {
+  const box = $('#footer-contribs');
+  const list = $('#contrib-list');
+  if (!box || !list) return;
+  let logins = null;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(CONTRIB_CACHE) || 'null');
+    if (cached && Date.now() - cached.at < 3600e3 && Array.isArray(cached.logins)) logins = cached.logins;
+  } catch {}
+  if (!logins) {
+    try {
+      const res = await fetch('https://api.github.com/repos/4lwayz/portwatch-vi/contributors?per_page=36', {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!Array.isArray(rows)) return;
+      logins = rows.filter((r) => r?.type === 'User' && LOGIN_RE.test(r.login || '')).map((r) => r.login);
+      try { sessionStorage.setItem(CONTRIB_CACHE, JSON.stringify({ at: Date.now(), logins })); } catch {}
+    } catch {
+      return;
+    }
+  }
+  if (!logins.length) return;
+  list.innerHTML = logins.map((login) => `
+    <a href="https://github.com/${encodeURIComponent(login)}" target="_blank" rel="noopener" title="${esc(login)}" aria-label="${esc(login)}">
+      <img src="https://github.com/${encodeURIComponent(login)}.png?size=48" alt="" width="24" height="24" loading="lazy" data-hide-on-error>
+    </a>`).join('');
+  box.hidden = false;
 }
 
 main().catch((err) => {

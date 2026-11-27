@@ -263,6 +263,7 @@
   "footer.data": "Datos:",
   "footer.dataTail": ", actualizados cada 3 horas por el rastreador.",
   "footer.scoutRun": "Última ejecución del rastreador {ago}",
+  "footer.contributors": "Colaboradores:",
 
   "error.load": "No se pudieron cargar los datos del tracker: {msg}",
 

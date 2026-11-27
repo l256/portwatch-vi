@@ -211,6 +211,7 @@
   "footer.data": "Data:",
   "footer.dataTail": ", refreshed every 3 hours by the scout.",
   "footer.scoutRun": "Last scout run {ago}",
+  "footer.contributors": "Contributors:",
 
   "error.load": "Couldn't load tracker data: {msg}",
 

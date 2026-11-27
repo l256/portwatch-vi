@@ -3180,6 +3180,65 @@
       "claims": [],
       "readmeSha": "346fcf9a17a21b44b89f69d23d1b6a2b4d277e488d529e933b0b32a76dd57f44",
       "readmeChangedAt": "2026-11-25"
+    },
+    {
+      "id": "victory-linux",
+      "name": "VIctory Linux",
+      "repo": "aDefaultUser/VIctory-linux",
+      "branch": "main",
+      "tier": "watchlist",
+      "gpu": [
+        "AMD"
+      ],
+      "approach": "Compatibility layer",
+      "target": "Unnamed Xbox Series title",
+      "summary": "VIctory fork for Wine and Proton. Its public guide reports player control in the opening of an unnamed Xbox Series title on one AMD PC. Cached replays restored faces and hair. Unscored.",
+      "highlights": [
+        "Opening reaches player control on Wine 11.22 and Proton Experimental 11.0 with a patched vkd3d-proton",
+        "Replays with a prior graphics pipeline cache restored faces and hair in the tested opening"
+      ],
+      "blockers": [
+        "Performance in the first playable room awaits a published benchmark",
+        "The public guide leaves the title unnamed, so the run remains unscored",
+        "Testing covers the opening on one RX 9070 XT. Cold launches can still lose faces"
+      ],
+      "groundwork": {
+        "loader": 0,
+        "shaders": 0,
+        "graphics": 0,
+        "proven": 0
+      },
+      "provenOn": null,
+      "gta": {
+        "loads": 0,
+        "boots": 0,
+        "menu": 0,
+        "world": 0,
+        "playable": 0,
+        "story": 0,
+        "render": 0,
+        "fps": 0,
+        "stability": "unknown"
+      },
+      "basedOn": [
+        "marvis",
+        "victory-gta6"
+      ],
+      "verification": "self-reported",
+      "stats": {
+        "stars": 2,
+        "forks": 0,
+        "openIssues": 0,
+        "createdAt": "2026-11-25T06:18:31Z",
+        "pushedAt": "2026-11-25T23:22:28Z",
+        "commits7d": 100,
+        "archived": false,
+        "missing": false
+      },
+      "assessedAt": "2026-11-26",
+      "assessedBy": "manual",
+      "claims": [],
+      "readmeSha": "35c66598233ed0641f812913b37153476d1bf219753e65958c7c94671e5ca6b2"
     }
   ],
   "tools": [

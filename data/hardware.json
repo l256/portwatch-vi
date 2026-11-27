@@ -1,0 +1,295 @@
+{
+    "updated": "2026-11-25",
+    "os": [
+        {
+            "id": "win11",
+            "label": "Windows 11"
+        },
+        {
+            "id": "win10",
+            "label": "Windows 10"
+        },
+        {
+            "id": "linux",
+            "label": "Linux"
+        }
+    ],
+    "resolutions": [
+        {
+            "id": "720p",
+            "label": "720p",
+            "height": 720,
+            "scale": 0.55
+        },
+        {
+            "id": "1080p",
+            "label": "1080p",
+            "height": 1080,
+            "scale": 1
+        },
+        {
+            "id": "1440p",
+            "label": "1440p",
+            "height": 1440,
+            "scale": 1.55
+        },
+        {
+            "id": "4k",
+            "label": "4K",
+            "height": 2160,
+            "scale": 3
+        }
+    ],
+    "gpus": [
+        {
+            "id": "rtx-3050",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 3050",
+            "vram": 8,
+            "tier": "entry"
+        },
+        {
+            "id": "rtx-3060",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 3060",
+            "vram": 12,
+            "tier": "mid"
+        },
+        {
+            "id": "rtx-3070",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 3070",
+            "vram": 8,
+            "tier": "mid"
+        },
+        {
+            "id": "rtx-4060",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 4060",
+            "vram": 8,
+            "tier": "mid"
+        },
+        {
+            "id": "rtx-4070",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 4070",
+            "vram": 12,
+            "tier": "high"
+        },
+        {
+            "id": "rtx-4070ti-super",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 4070 Ti SUPER",
+            "vram": 16,
+            "tier": "high"
+        },
+        {
+            "id": "rtx-4080",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 4080",
+            "vram": 16,
+            "tier": "high"
+        },
+        {
+            "id": "rtx-4090",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 4090",
+            "vram": 24,
+            "tier": "flagship"
+        },
+        {
+            "id": "rtx-5060ti",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 5060 Ti",
+            "vram": 16,
+            "tier": "mid"
+        },
+        {
+            "id": "rtx-5070ti",
+            "vendor": "nvidia",
+            "name": "GeForce RTX 5070 Ti",
+            "vram": 16,
+            "tier": "high"
+        },
+        {
+            "id": "rx-6600",
+            "vendor": "amd",
+            "name": "Radeon RX 6600",
+            "vram": 8,
+            "tier": "entry"
+        },
+        {
+            "id": "rx-7600",
+            "vendor": "amd",
+            "name": "Radeon RX 7600",
+            "vram": 8,
+            "tier": "mid"
+        },
+        {
+            "id": "rx-7700xt",
+            "vendor": "amd",
+            "name": "Radeon RX 7700 XT",
+            "vram": 12,
+            "tier": "mid"
+        },
+        {
+            "id": "rx-7800xt",
+            "vendor": "amd",
+            "name": "Radeon RX 7800 XT",
+            "vram": 16,
+            "tier": "high"
+        },
+        {
+            "id": "rx-7900xt",
+            "vendor": "amd",
+            "name": "Radeon RX 7900 XT",
+            "vram": 20,
+            "tier": "high"
+        },
+        {
+            "id": "rx-7900xtx",
+            "vendor": "amd",
+            "name": "Radeon RX 7900 XTX",
+            "vram": 24,
+            "tier": "flagship"
+        },
+        {
+            "id": "rx-9060xt",
+            "vendor": "amd",
+            "name": "Radeon RX 9060 XT",
+            "vram": 16,
+            "tier": "mid"
+        },
+        {
+            "id": "rx-9070xt",
+            "vendor": "amd",
+            "name": "Radeon RX 9070 XT",
+            "vram": 16,
+            "tier": "high"
+        },
+        {
+            "id": "arc-b580",
+            "vendor": "intel",
+            "name": "Intel Arc B580",
+            "vram": 12,
+            "tier": "mid"
+        }
+    ],
+    "rams": [
+        8,
+        16,
+        32,
+        64,
+        128
+    ],
+    "benchmarks": [
+        {
+            "build": "VIctory-Belobug-AMD",
+            "project": "Belobug's VIctory fork for AMD",
+            "gpu": "rx-9070xt",
+            "gpuVram": 16,
+            "ram": 64,
+            "os": "win11",
+            "resolution": "1080p",
+            "fps": {
+                "min": 3,
+                "max": 5
+            },
+            "stability": "rarely",
+            "render": "close-to-retail",
+            "vendorOnly": "amd",
+            "notes": "Plays through missions; ~3 fps while driving. Needs ~22 GB of RAM.",
+            "source": "https://github.com/Belobug/VIctory-Belobug-AMD",
+            "verified": true
+        },
+        {
+            "build": "DexNom Runtime",
+            "project": "DexNom's VIctory fork for AMD",
+            "gpu": "rx-7900xtx",
+            "gpuVram": 24,
+            "ram": 64,
+            "os": "win11",
+            "resolution": "1080p",
+            "fps": {
+                "min": 3,
+                "max": 4
+            },
+            "stability": "rarely",
+            "render": "close-to-retail",
+            "vendorOnly": "amd",
+            "notes": "Open world plays through missions, close to the retail game.",
+            "source": "https://github.com/DexNom/VIctory",
+            "verified": true
+        },
+        {
+            "build": "ztrx (ZETTROX)",
+            "project": "ZETTROX's NVIDIA-tuned VIctory fork",
+            "gpu": "rtx-3050",
+            "gpuVram": 8,
+            "ram": 32,
+            "os": "win11",
+            "resolution": "1080p",
+            "fps": {
+                "min": 1,
+                "max": 3
+            },
+            "stability": "rarely",
+            "render": "poor (shadows black)",
+            "vendorOnly": "nvidia",
+            "notes": "Played from the prologue into the first mission without crashing.",
+            "source": "https://github.com/Zettrox/ztrx",
+            "verified": false
+        },
+        {
+            "build": "victory-fork",
+            "project": "hyphennn's victory-fork",
+            "gpu": "rtx-4070ti-super",
+            "gpuVram": 16,
+            "ram": 32,
+            "os": "win11",
+            "resolution": "1080p",
+            "fps": {
+                "min": 6,
+                "max": 6
+            },
+            "stability": "unknown",
+            "render": "in the world",
+            "notes": "Reproduced in the world at ~6 fps on an RTX 4070 Ti SUPER.",
+            "source": "https://github.com/fxceless/victory-fork",
+            "verified": false
+        },
+        {
+            "build": "TuxBox",
+            "project": "TuxBox compatibility layer (Linux/Proton)",
+            "gpu": "rtx-4070ti-super",
+            "gpuVram": 16,
+            "ram": 32,
+            "os": "linux",
+            "resolution": "4k",
+            "fps": null,
+            "stability": "unknown",
+            "render": "first frame",
+            "notes": "Reached the player-selection prompt at 4K; no gameplay FPS yet.",
+            "source": "https://github.com/brcly/TuxBox",
+            "verified": false
+        },
+        {
+            "build": "VIcky",
+            "project": "Xeltax's VIcky research fork",
+            "gpu": "rtx-4080",
+            "gpuVram": 16,
+            "ram": 32,
+            "os": "win11",
+            "resolution": "1080p",
+            "fps": {
+                "min": 6,
+                "max": 6
+            },
+            "stability": "unknown",
+            "render": "Series S profile",
+            "notes": "Victory-fork based; ~6 fps on an RTX 4080 (Series S profile).",
+            "source": "https://github.com/Xeltax/VIcky",
+            "verified": false
+        }
+    ]
+}

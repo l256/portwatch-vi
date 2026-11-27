@@ -3,6 +3,7 @@ import { getLiveViewers, trackView } from './backend.js';
 import { coverHtml, articlePath, newsTime, byNewest } from './news-shared.js';
 import { fillPinned } from './pinned.js';
 import { initI18n, t, tr, locale } from './i18n.js';
+import { initHardware } from './hardware-ui.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -72,6 +73,9 @@ async function main() {
   // The pinned message is optional: it loads alongside and never holds up or breaks the page.
   const pinned = fetch(`data/pinned.json?ts=${Math.floor(Date.now() / 6e4)}`, { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  // The hardware checker config is optional and loads alongside everything else.
+  const hardware = fetch(`data/hardware.json?ts=${Math.floor(Date.now() / 6e4)}`, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null);
   // Translations load alongside the data; initI18n never throws and falls back to English.
   const [res] = await Promise.all([
     fetch(`data/tracker.json?ts=${Math.floor(Date.now() / 6e4)}`, { cache: 'no-cache' }),
@@ -85,6 +89,7 @@ async function main() {
   renderHeroArt(data.site || {});
   startCountdown(data.exe || {});
   pinned.then((p) => fillPinned($('#pinned'), p, { ago, when: (iso) => new Date(iso).toLocaleString(locale()) }));
+  hardware.then((cfg) => initHardware(cfg));
   renderOverall(data);
   renderChanges(data.changes || []);
   renderFilterChips();

@@ -291,6 +291,27 @@
       </details>
     </section>
 
+    <section class="wrap section" id="hardware" aria-labelledby="hw-title">
+      <div class="section-head">
+        <div>
+          <p class="kicker" data-i18n="hw.kicker">Can you run GTA VI?</p>
+          <h2 id="hw-title" data-i18n="hw.title">Hardware compatibility checker</h2>
+          <p class="sub" data-i18n="hw.sub">Compare your PC against the real tests reported by the tracked projects. Estimates come only from actual community benchmarks, never from theoretical specs.</p>
+        </div>
+      </div>
+      <div class="hw-card card">
+        <form class="hw-form" id="hw-form" autocomplete="off">
+          <label class="hw-field"><span data-i18n="hw.os">Operating system</span><select id="hw-os"></select></label>
+          <label class="hw-field"><span data-i18n="hw.res">Resolution</span><select id="hw-res"></select></label>
+          <label class="hw-field"><span data-i18n="hw.gpu">Graphics card</span><select id="hw-gpu"></select></label>
+          <label class="hw-field"><span data-i18n="hw.ram">Memory (RAM)</span><select id="hw-ram"></select></label>
+        </form>
+        <div class="hw-results" id="hw-results" aria-live="polite">
+          <p class="empty" id="hw-empty" data-i18n="hw.empty">Pick your parts to see how they compare.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="wrap section" id="method" aria-labelledby="method-title">
       <div class="section-head">
         <div>

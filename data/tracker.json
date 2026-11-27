@@ -1462,7 +1462,7 @@
       "highlights": [
         "README reports first-boot screens, intro video, start screen and saves working at 30 fps",
         "Intro cutscene drawn textured and lit, with hair, sky and depth of field",
-        "Owner reports player-controlled gameplay is now reachable, but remains unstable"
+        "Owner reports player-controlled gameplay is now reachable, but remains unstable. Synthetic RTX 4090 Laptop testing confirmed physical descriptor-slot reuse."
       ],
       "blockers": [
         "About 1 fps; ray-traced shadows and indirect light are missing",
